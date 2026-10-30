@@ -1,0 +1,40 @@
+{
+  "/holds/cancel": {
+    "get": {
+      "x-mojo-to": "CancelHoldLink::Controller#show",
+      "operationId": "cancelHoldLinkShow",
+      "tags": ["holds"],
+      "summary": "Page de confirmation d'annulation (aucune authentification, le jeton fait foi)",
+      "parameters": [
+        { "name": "token", "in": "query", "required": true, "type": "string" },
+        { "name": "lang", "in": "query", "required": false, "type": "string" }
+      ],
+      "produces": ["text/html"],
+      "responses": {
+        "200": { "description": "Page de confirmation" },
+        "400": { "description": "Jeton invalide ou expiré" },
+        "404": { "description": "Réservation introuvable" },
+        "409": { "description": "Réservation non annulable" }
+      }
+    },
+    "post": {
+      "x-mojo-to": "CancelHoldLink::Controller#cancel",
+      "operationId": "cancelHoldLinkCancel",
+      "tags": ["holds"],
+      "summary": "Annule la réservation désignée par le jeton",
+      "parameters": [
+        { "name": "token", "in": "query", "required": true, "type": "string" },
+        { "name": "lang", "in": "query", "required": false, "type": "string" }
+      ],
+      "consumes": ["application/x-www-form-urlencoded"],
+      "produces": ["text/html"],
+      "responses": {
+        "200": { "description": "Réservation annulée" },
+        "400": { "description": "Jeton invalide ou expiré" },
+        "404": { "description": "Réservation introuvable" },
+        "409": { "description": "Réservation non annulable" },
+        "500": { "description": "Erreur lors de l'annulation" }
+      }
+    }
+  }
+}

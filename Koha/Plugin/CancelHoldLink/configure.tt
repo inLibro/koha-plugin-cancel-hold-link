@@ -1,0 +1,69 @@
+[% INCLUDE 'doc-head-open.inc' %]
+<title>Koha: CancelHoldLink</title>
+[% INCLUDE 'doc-head-close.inc' %]
+</head>
+<body>
+[% INCLUDE 'header.inc' %]
+
+<div id="breadcrumbs"><a href="/cgi-bin/koha/mainpage.pl">Accueil</a> &rsaquo; <a href="/cgi-bin/koha/plugins/plugins-home.pl">Plugins</a> &rsaquo; CancelHoldLink</div>
+
+<div class="main container-fluid">
+    <h1>Lien d'annulation de réservation</h1>
+
+    [% IF saved %]<div class="alert alert-info">Configuration enregistrée.</div>[% END %]
+
+    <form method="post">
+        [% INCLUDE 'csrf-token.inc' %]
+        <input type="hidden" name="class" value="[% CLASS | html %]"/>
+        <input type="hidden" name="method" value="[% METHOD | html %]"/>
+        <input type="hidden" name="op" value="cud-save"/>
+
+        <fieldset class="rows">
+            <ol>
+                <li>
+                    <label for="expiry_days">Validité du lien (jours) :</label>
+                    <input type="number" min="1" id="expiry_days" name="expiry_days" value="[% expiry_days | html %]"/>
+                </li>
+                <li>
+                    <label for="waiting_mode">Réservations en attente de retrait :</label>
+                    <select id="waiting_mode" name="waiting_mode">
+                        <option value="request" [% IF waiting_mode == 'request' %]selected="selected"[% END %]>Demande d'annulation traitée par le personnel (comme à l'OPAC)</option>
+                        <option value="cancel" [% IF waiting_mode == 'cancel' %]selected="selected"[% END %]>Annulation immédiate</option>
+                        <option value="none" [% IF waiting_mode == 'none' %]selected="selected"[% END %]>Refusée</option>
+                    </select>
+                    <div class="hint">Les réservations non encore attribuées à un exemplaire sont toujours annulées directement.<br/>
+                        « Demande d'annulation » : seulement si la règle de circulation « Annulation des réservations en attente » (waiting_hold_cancellation) le permet;
+                        la demande apparaît dans Circulation › Réservations à récupérer › Demandes d'annulation.<br/>
+                        « Annulation immédiate » : l'exemplaire reste sur la tablette jusqu'à ce que le personnel le traite.</div>
+                </li>
+                <li>
+                    <label for="cancellation_reason">Motif d'annulation :</label>
+                    <input type="text" id="cancellation_reason" name="cancellation_reason" value="[% cancellation_reason | html %]"/>
+                    <div class="hint">Code de la valeur autorisée HOLD_CANCELLATION (optionnel). Si renseigné, Koha envoie aussi l'avis HOLD_CANCELLATION.</div>
+                </li>
+                <li>
+                    <label for="regenerate_secret">Régénérer la clé secrète :</label>
+                    <input type="checkbox" id="regenerate_secret" name="regenerate_secret" value="1"/>
+                    <div class="hint">Invalide immédiatement tous les liens déjà envoyés.</div>
+                </li>
+            </ol>
+        </fieldset>
+        <fieldset class="action"><input type="submit" class="btn btn-primary" value="Enregistrer"/></fieldset>
+    </form>
+
+    <h2>Utilisation</h2>
+    <p>Avis qui concernent une seule réservation (HOLD, HOLDDGST, HOLDPLACED_PATRON) :</p>
+    <pre>[&#37; IF plugin_content.cancelhold.cancel_url &#37;]
+&lt;a href="[&#37; plugin_content.cancelhold.cancel_url &#37;]"&gt;Annuler cette réservation&lt;/a&gt;
+[&#37; END &#37;]</pre>
+    <p>Avis qui bouclent sur plusieurs réservations (HOLD_REMINDER) :</p>
+    <pre>[&#37; FOREACH hold IN holds &#37;]
+[&#37; hold.biblio.title &#37;]
+[&#37; SET url = plugin_content.cancelhold.cancel_urls.${hold.reserve_id} &#37;]
+[&#37; IF url &#37;]&lt;a href="[&#37; url &#37;]"&gt;Annuler cette réservation&lt;/a&gt;[&#37; END &#37;]
+[&#37; END &#37;]</pre>
+    <p>Point d'entrée : <code>[% api_url | html %]/holds/cancel?token=…</code>
+        [% UNLESS api_url %]<strong>(la préférence OPACBaseURL doit être renseignée)</strong>[% END %]</p>
+</div>
+
+[% INCLUDE 'intranet-bottom.inc' %]
